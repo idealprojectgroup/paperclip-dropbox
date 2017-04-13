@@ -12,7 +12,7 @@ module Paperclip
         base.instance_eval do
           @options[:dropbox_options] ||= {}
           @options[:path] = nil if @options[:path] == self.class.default_options[:path]
-          @options[:dropbox_visibility] ||= "public"
+          @options[:dropbox_visibility] ||= "private"
 
           @path_generator = PathGenerator.new(self, @options)
 
@@ -49,15 +49,15 @@ module Paperclip
 
       def copy_to_local_file(style = default_style, destination_path)
         File.open(destination_path, "wb") do |file|
-          file.write(dropbox_client.get_file(path(style)))
+          file.write(dropbox_client.download(path(style)))
         end
       end
 
       def exists?(style = default_style)
         return false if not present?
-        metadata = dropbox_client.metadata(path(style))
-        not metadata.nil? and not metadata["is_deleted"]
-      rescue DropboxError
+        metadata = dropbox_client.get_metadata(path(style))
+        not metadata.nil?
+      rescue ::Dropbox::ApiError
         false
       end
 
